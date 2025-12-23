@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: nginx-local
+  namespace: argocd
+spec:
+  project: default
+  source:
+    # Этот манифест будет работать после того, как вы:
+    # 1. Запушите репозиторий на GitHub/GitLab, например:
+    #    git remote add origin https://github.com/your-username/argo-cd-test.git
+    #    git push -u origin master
+    # 2. Замените repoURL ниже на URL вашего репозитория
+    repoURL: REPLACE_WITH_YOUR_REPO_URL
+    targetRevision: HEAD
+    path: k8s/test-app
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: test-app
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
