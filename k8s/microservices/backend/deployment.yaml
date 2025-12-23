@@ -23,6 +23,7 @@ spec:
         - -c
         - |
           pip install flask==3.0.0 flask-cors==4.0.0 && \
+          mkdir -p /app && \
           cat > /app/app.py <<'EOF'
           from flask import Flask, jsonify
           from flask_cors import CORS
