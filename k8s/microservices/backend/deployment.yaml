@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: default
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+      - name: backend
+        image: python:3.11-slim
+        command:
+        - /bin/sh
+        - -c
+        - |
+          pip install flask==3.0.0 flask-cors==4.0.0 && \
+          cat > /app/app.py <<'EOF'
+          from flask import Flask, jsonify
+          from flask_cors import CORS
+          import os
+          import socket
+
+          app = Flask(__name__)
+          CORS(app)
+
+          @app.route('/api/info', methods=['GET'])
+          def get_info():
+              version = os.getenv('APP_VERSION', 'v1.0')
+              message = os.getenv('APP_MESSAGE', 'Hello from Flask Backend!')
+              return jsonify({
+                  'version': version,
+                  'message': message,
+                  'hostname': socket.gethostname(),
+                  'status': 'healthy'
+              })
+
+          @app.route('/health', methods=['GET'])
+          def health():
+              return jsonify({'status': 'ok'}), 200
+
+          if __name__ == '__main__':
+              app.run(host='0.0.0.0', port=5000)
+          EOF
+          python /app/app.py
+        ports:
+        - containerPort: 5000
+          name: http
+        envFrom:
+        - configMapRef:
+            name: backend-config
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"

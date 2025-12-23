@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config
+  namespace: default
+data:
+  APP_VERSION: "v1.0"
+  APP_MESSAGE: "Hello from Flask Backend on Kubernetes!"

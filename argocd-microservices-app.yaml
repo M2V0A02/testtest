@@ -1,0 +1,43 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: microservices-app
+  namespace: argocd
+spec:
+  project: default
+
+  # Source - откуда брать манифесты
+  source:
+    repoURL: https://github.com/M2V0A02/testtest.git
+    targetRevision: HEAD
+    path: k8s/microservices
+
+  # Destination - куда деплоить
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+
+  # Sync policy - как синхронизировать
+  syncPolicy:
+    automated:
+      prune: true       # Удалять ресурсы, которых нет в git
+      selfHeal: true    # Автоматически восстанавливать изменения в кластере
+      allowEmpty: false # Не разрешать пустые коммиты
+
+    syncOptions:
+    - CreateNamespace=true  # Создать namespace если его нет
+    - RespectIgnoreDifferences=true
+
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+
+  # Игнорировать различия в определенных полях
+  ignoreDifferences:
+  - group: apps
+    kind: Deployment
+    jsonPointers:
+    - /spec/replicas  # Игнорировать изменения в replicas (для HPA)

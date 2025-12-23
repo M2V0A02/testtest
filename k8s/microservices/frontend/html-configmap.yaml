@@ -1,0 +1,196 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frontend-html
+  namespace: default
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html lang="ru">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>GitOps Demo App</title>
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            body {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                min-height: 100vh;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                padding: 20px;
+            }
+            .container {
+                background: white;
+                border-radius: 20px;
+                padding: 40px;
+                max-width: 600px;
+                width: 100%;
+                box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            }
+            h1 {
+                color: #667eea;
+                margin-bottom: 10px;
+                text-align: center;
+            }
+            .subtitle {
+                color: #666;
+                text-align: center;
+                margin-bottom: 30px;
+                font-size: 14px;
+            }
+            .info-card {
+                background: #f8f9fa;
+                border-radius: 10px;
+                padding: 20px;
+                margin-bottom: 20px;
+            }
+            .info-row {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 10px;
+                padding-bottom: 10px;
+                border-bottom: 1px solid #e0e0e0;
+            }
+            .info-row:last-child {
+                border-bottom: none;
+                margin-bottom: 0;
+                padding-bottom: 0;
+            }
+            .label {
+                font-weight: 600;
+                color: #555;
+            }
+            .value {
+                color: #667eea;
+                font-weight: 500;
+            }
+            .message-box {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                padding: 20px;
+                border-radius: 10px;
+                text-align: center;
+                font-size: 18px;
+                margin-bottom: 20px;
+                font-weight: 500;
+            }
+            button {
+                width: 100%;
+                padding: 15px;
+                background: #667eea;
+                color: white;
+                border: none;
+                border-radius: 10px;
+                font-size: 16px;
+                cursor: pointer;
+                font-weight: 600;
+                transition: all 0.3s;
+            }
+            button:hover {
+                background: #764ba2;
+                transform: translateY(-2px);
+                box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            }
+            button:active {
+                transform: translateY(0);
+            }
+            .loading {
+                text-align: center;
+                color: #999;
+                padding: 20px;
+            }
+            .error {
+                background: #ff4757;
+                color: white;
+                padding: 15px;
+                border-radius: 10px;
+                margin-bottom: 20px;
+                text-align: center;
+            }
+            .footer {
+                text-align: center;
+                margin-top: 20px;
+                color: #999;
+                font-size: 12px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>🚀 GitOps Demo Application</h1>
+            <div class="subtitle">ArgoCD + Kubernetes + Flask</div>
+
+            <div id="content">
+                <div class="loading">Загрузка данных...</div>
+            </div>
+
+            <button onclick="fetchData()">🔄 Обновить данные</button>
+
+            <div class="footer">
+                Powered by ArgoCD GitOps
+            </div>
+        </div>
+
+        <script>
+            const BACKEND_URL = window.BACKEND_URL || 'http://backend:5000';
+
+            async function fetchData() {
+                const contentDiv = document.getElementById('content');
+                contentDiv.innerHTML = '<div class="loading">Загрузка данных...</div>';
+
+                try {
+                    const response = await fetch(`${BACKEND_URL}/api/info`);
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+
+                    contentDiv.innerHTML = `
+                        <div class="message-box">
+                            ${data.message}
+                        </div>
+                        <div class="info-card">
+                            <div class="info-row">
+                                <span class="label">Версия:</span>
+                                <span class="value">${data.version}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="label">Backend Pod:</span>
+                                <span class="value">${data.hostname}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="label">Статус:</span>
+                                <span class="value">${data.status}</span>
+                            </div>
+                        </div>
+                    `;
+                } catch (error) {
+                    contentDiv.innerHTML = `
+                        <div class="error">
+                            ❌ Ошибка подключения к backend<br>
+                            <small>${error.message}</small>
+                        </div>
+                        <div class="info-card">
+                            <div class="info-row">
+                                <span class="label">Backend URL:</span>
+                                <span class="value" style="font-size: 12px;">${BACKEND_URL}</span>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+
+            // Загрузить данные при загрузке страницы
+            fetchData();
+        </script>
+    </body>
+    </html>
